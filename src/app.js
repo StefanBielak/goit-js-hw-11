@@ -1,56 +1,36 @@
+import SimpleLightbox from 'simplelightbox';
+import { fetchImages } from './api';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+
 const searchForm = document.getElementById('search-form');
 const gallery = document.querySelector('.gallery');
 const loadMoreBtn = document.querySelector('.load-more');
 let page = 1;
-
+let lightbox;
+window.addEventListener('DOMContentLoaded', () => {
+  const emptyCard = document.querySelector('.photo-card');
+  if (emptyCard) {
+    emptyCard.remove();
+  }
+})
 searchForm.addEventListener('submit', async e => {
   e.preventDefault();
   page = 1;
   const searchQuery = e.target.searchQuery.value;
-  await fetchImages(searchQuery);
+  await performImageSearch(searchQuery);
 });
+
 loadMoreBtn.addEventListener('click', async () => {
   page++;
   const searchQuery = searchForm.searchQuery.value;
-  await fetchImages(searchQuery, page);
+  await performImageSearch(searchQuery, page);
 });
-
-async function fetchImages(query, pageNumber = 1) {
-  const apiKey = '39441278-dab432af90fd5d2445b56ddfd';
-  const perPage = 40;
-  const apiUrl = `https://pixabay.com/api/?key=${apiKey}&q=${query}&image_type=photo&orientation=horizontal&safesearch=true&page=${pageNumber}&per_page=${perPage}`;
-
-  try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
-
-    if (pageNumber === 1) {
-      gallery.innerHTML = '';
-    }
-
-    if (data.hits.length === 0) {
-      alert('Przepraszamy, nie znaleziono obrazków pasujących do zapytania.');
-    } else {
-      data.hits.forEach(image => {
-        const card = createImageCard(image);
-        gallery.appendChild(card);
-      });
-      loadMoreBtn.style.display = 'block';
-      if (pageNumber * perPage >= data.totalHits) {
-        loadMoreBtn.style.display = 'none';
-        alert('Przepraszamy, osiągnąłeś koniec wyników wyszukiwania.');
-      }
-    }
-  } catch (error) {
-    console.error('Wystąpił błąd podczas pobierania obrazków:', error);
-    alert(
-      'Wystąpił błąd podczas pobierania obrazków. Spróbuj ponownie później.'
-    );
-  }
-}
 function createImageCard(image) {
   const card = document.createElement('div');
   card.classList.add('photo-card');
+
+  const imgLink = document.createElement('a');
+  imgLink.href = image.largeImageURL;
 
   const img = document.createElement('img');
   img.src = image.webformatURL;
@@ -81,7 +61,8 @@ function createImageCard(image) {
   info.appendChild(comments);
   info.appendChild(downloads);
 
-  card.appendChild(img);
+  imgLink.appendChild(img);
+  card.appendChild(imgLink);
   card.appendChild(info);
 
   return card;
@@ -195,4 +176,45 @@ function displayImageInModal(image) {
     <p><b>Comments:</b> ${image.comments}</p>
     <p><b>Downloads:</b> ${image.downloads}</p>
   `;
+}
+async function performImageSearch(query, pageNumber = 1) {
+  try {
+    const data = await fetchImages(query, pageNumber);
+
+    if (pageNumber === 1) {
+      gallery.innerHTML = '';
+    }
+
+    if (data.hits.length === 0) {
+      alert('Przepraszamy, nie znaleziono obrazków pasujących do zapytania.');
+    } else {
+      data.hits.forEach(image => {
+        const card = createImageCard(image);
+        gallery.appendChild(card);
+      });
+
+      if (!lightbox) {
+        lightbox = new SimpleLightbox('.gallery p', {
+        });
+      } else {
+        lightbox.refresh();
+      }
+      const modalElement = document.querySelector('.sl-wrapper');
+      modalElement.addEventListener('click', event => {
+        if (event.target === modalElement) {
+          lightbox.close();
+        }
+      });
+      loadMoreBtn.style.display = 'block';
+      if (pageNumber * data.hitsPerPage >= data.totalHits) {
+        loadMoreBtn.style.display = 'none';
+        alert('Przepraszamy, osiągnąłeś koniec wyników wyszukiwania.');
+      }
+    }
+  } catch (error) {
+    console.error('Wystąpił błąd podczas pobierania obrazków:', error);
+    alert(
+      'Wystąpił błąd podczas pobierania obrazków. Spróbuj ponownie później.'
+    );
+  }
 }
