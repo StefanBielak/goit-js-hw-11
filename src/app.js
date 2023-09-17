@@ -144,39 +144,6 @@ gallery.addEventListener('click', function (e) {
     openModal();
   }
 });
-
-const modal = document.getElementById('imageModal');
-const closeModalBtn = document.querySelector('.close');
-
-closeModalBtn.addEventListener('click', closeModal);
-modal.addEventListener('click', function (e) {
-  if (e.target === modal) {
-    closeModal();
-  }
-});
-
-function openModal() {
-  modal.style.display = 'block';
-}
-
-function closeModal() {
-  modal.style.display = 'none';
-}
-
-function displayImageInModal(image) {
-  const modalImage = document.getElementById('modalImage');
-  const modalInfo = document.getElementById('modalInfo');
-
-  modalImage.src = image.url;
-  modalImage.alt = image.alt;
-
-  modalInfo.innerHTML = `
-    <p><b>Likes:</b> ${image.likes}</p>
-    <p><b>Views:</b> ${image.views}</p>
-    <p><b>Comments:</b> ${image.comments}</p>
-    <p><b>Downloads:</b> ${image.downloads}</p>
-  `;
-}
 async function performImageSearch(query, pageNumber = 1) {
   try {
     const data = await fetchImages(query, pageNumber);
@@ -194,7 +161,7 @@ async function performImageSearch(query, pageNumber = 1) {
       });
 
       if (!lightbox) {
-        lightbox = new SimpleLightbox('.gallery p', {
+        lightbox = new SimpleLightbox('.gallery a', {
         });
       } else {
         lightbox.refresh();
