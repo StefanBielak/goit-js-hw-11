@@ -166,12 +166,7 @@ async function performImageSearch(query, pageNumber = 1) {
       } else {
         lightbox.refresh();
       }
-      const modalElement = document.querySelector('.sl-wrapper');
-      modalElement.addEventListener('click', event => {
-        if (event.target === modalElement) {
-          lightbox.close();
-        }
-      });
+      
       loadMoreBtn.style.display = 'block';
       if (pageNumber * data.hitsPerPage >= data.totalHits) {
         loadMoreBtn.style.display = 'none';
